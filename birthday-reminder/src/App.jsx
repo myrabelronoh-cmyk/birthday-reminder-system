@@ -6,20 +6,18 @@ import {
   Users,
   Gift,
   Search,
-  Bell,
   Plus,
   ChevronRight,
   Settings,
   LayoutDashboard,
   Calendar,
   LoaderCircle,
-  AlertCircle,
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { isFirebaseConfigured } from "./services/firebase";
 import { mockBirthdays } from "./data/mockBirthdays";
+import AuthScreen from "./components/AuthScreen";
 
 function getNextBirthday(birthday) {
   const today = new Date();
@@ -80,21 +78,21 @@ function getInitials(name) {
 
 function StatCard({ title, value, description, icon: Icon }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="stat-card">
+      <div className="stat-top">
         <div>
-          <p className="text-sm text-slate-500">{title}</p>
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">
+          <p className="stat-label">{title}</p>
+          <h2 className="stat-value">
             {value}
           </h2>
         </div>
 
-        <div className="rounded-xl bg-indigo-50 p-3">
-          <Icon className="h-6 w-6 text-indigo-600" />
+        <div className="stat-icon">
+          <Icon size={20} />
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="stat-description">
         {description}
       </p>
     </div>
@@ -106,33 +104,33 @@ function BirthdayCard({ birthday }) {
   const age = getTurningAge(birthday);
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-slate-100 p-4 transition hover:bg-slate-50">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+    <div className="birthday-row">
+      <div className="person-avatar">
         {getInitials(birthday.name)}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold text-slate-800">
+      <div className="person-details">
+        <h3 className="person-name">
           {birthday.name}
         </h3>
 
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="person-meta">
           {birthday.category} · Turning {age}
         </p>
       </div>
 
-      <div className="text-right">
+      <div className="birthday-date">
         {days === 0 ? (
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+          <span className="today-label">
             Today!
           </span>
         ) : (
-          <p className="text-sm font-semibold text-indigo-600">
+          <p className="birthday-countdown">
             {days} {days === 1 ? "day" : "days"}
           </p>
         )}
 
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="birthday-day">
           {birthday.day}/{birthday.month}
         </p>
       </div>
@@ -141,9 +139,20 @@ function BirthdayCard({ birthday }) {
 }
 
 function App() {
-  const { currentUser, loading, authError } = useAuth();
+  const { currentUser, loading, authError, signOut } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [signOutError, setSignOutError] = useState("");
+
+  async function handleSignOut() {
+    setSignOutError("");
+
+    try {
+      await signOut();
+    } catch (error) {
+      setSignOutError(error.message);
+    }
+  }
 
   const todayBirthdays = useMemo(
     () =>
@@ -181,45 +190,41 @@ function App() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-indigo-600" />
-          <p className="mt-3 text-sm text-slate-500">
-            Loading your account...
-          </p>
-        </div>
+      <main className="loading-screen">
+        <LoaderCircle size={28} />
+        <p>Loading your account...</p>
       </main>
     );
   }
 
+  if (!currentUser) {
+    return <AuthScreen />;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="app-shell">
+        <aside className="sidebar">
 
-      <div className="flex min-h-screen">
-
-        
-        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white p-6 lg:block">
-
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-indigo-600 p-2">
-              <Cake className="h-6 w-6 text-white" />
+          <div className="brand">
+            <div className="brand-mark">
+              <Cake size={22} />
             </div>
 
             <div>
-              <h1 className="text-lg font-bold text-slate-900">
+              <h1 className="brand-name">
                 Birthday Reminder
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="brand-caption">
                 Celebrate every moment
               </p>
             </div>
           </div>
 
-          <nav className="mt-10 space-y-2">
+          <nav className="side-nav">
 
             <a
               href="#/"
-              className="flex items-center gap-3 rounded-xl bg-indigo-50 px-4 py-3 font-medium text-indigo-700"
+              className="nav-link active"
             >
               <LayoutDashboard size={19} />
               Dashboard
@@ -227,7 +232,7 @@ function App() {
 
             <a
               href="#/birthdays"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-50"
+              className="nav-link"
             >
               <Calendar size={19} />
               Birthdays
@@ -235,7 +240,7 @@ function App() {
 
             <a
               href="#/settings"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-50"
+              className="nav-link"
             >
               <Settings size={19} />
               Settings
@@ -243,14 +248,12 @@ function App() {
 
           </nav>
 
-          <div className="mt-12 rounded-2xl bg-indigo-50 p-4">
-            <Gift className="h-7 w-7 text-indigo-600" />
+          <div className="sidebar-note">
+            <Gift size={24} />
 
-            <h3 className="mt-3 font-semibold text-indigo-900">
-              Make someone's day!
-            </h3>
+            <h3>Make someone feel special today</h3>
 
-            <p className="mt-2 text-xs leading-relaxed text-indigo-700">
+            <p>
               A thoughtful birthday wish can make a special day even better.
             </p>
           </div>
@@ -258,50 +261,53 @@ function App() {
         </aside>
 
        
-        <main className="min-w-0 flex-1">
+        <main className="main-area">
 
          
-          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 md:px-8">
+          <header className="topbar">
 
             <div>
-              <h2 className="font-bold text-slate-900">
+              <h2>
                 Dashboard
+                <span className="breadcrumb-separator">
+                  <ChevronRight size={14} />
+                </span>
+                <span className="breadcrumb-current">
+                  Overview
+                </span>
               </h2>
 
-              <p className="text-xs text-slate-500">
-                Your birthday overview
+              <p>
+              Here is a quick overview of your birthday reminders.
               </p>
+
             </div>
 
-            <div className="flex items-center gap-4">
-
-              <button
-                type="button"
-                aria-label="Notifications"
-                className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
-              >
-                <Bell size={20} />
-              </button>
-
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+            <div className="topbar-actions">
+              <div className="user-avatar">
                 {getInitials(greetingName)}
               </div>
 
+              <button
+                type="button"
+                className="sign-out-button"
+                onClick={handleSignOut}
+              >
+                Sign out
+              </button>
             </div>
 
           </header>
 
-          <div className="mx-auto max-w-7xl space-y-8 p-5 md:p-8">
-
-            {/* Welcome */}
-            <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="dashboard-content">
+            <section className="welcome-section">
 
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
-                  Welcome, {greetingName}! 
+                <h1 className="welcome-title">
+                  Welcome, {greetingName}!
                 </h1>
 
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="welcome-copy">
                   Here is what's happening with your birthdays.
                 </p>
               </div>
@@ -310,7 +316,7 @@ function App() {
                 type="button"
                 disabled
                 title="Birthday management will be enabled in Sprint 5"
-                className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white opacity-70"
+                className="primary-button"
               >
                 <Plus size={18} />
                 Add Birthday
@@ -318,43 +324,14 @@ function App() {
 
             </section>
 
-            {/* Firebase status */}
-            <section
-              className={`flex items-start gap-3 rounded-xl border p-4 ${
-                isFirebaseConfigured
-                  ? "border-emerald-200 bg-emerald-50"
-                  : "border-amber-200 bg-amber-50"
-              }`}
-            >
-              {isFirebaseConfigured ? (
-                <Heart className="mt-0.5 h-5 w-5 text-emerald-600" />
-              ) : (
-                <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
-              )}
-
-              <div>
-                <p className="text-sm font-semibold">
-                  {isFirebaseConfigured
-                    ? "Firebase configuration detected"
-                    : "Firebase configuration required"}
-                </p>
-
-                <p className="mt-1 text-xs text-slate-600">
-                  {isFirebaseConfigured
-                    ? "The Firebase configuration is available. Authentication and database operations still need to be tested."
-                    : "Add your Firebase values to .env and restart the development server to connect your project."}
-                </p>
-              </div>
-            </section>
-
-            {authError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                Authentication error: {authError}
+            {(signOutError || authError) && (
+              <div className="auth-error">
+                Authentication error: {signOutError || authError}
               </div>
             )}
 
             
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="stats-grid">
 
               <StatCard
                 title="Total Birthdays"
@@ -391,24 +368,24 @@ function App() {
             </section>
 
             {/* Today's birthdays */}
-            <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
+            <section className="content-card">
 
-              <div className="mb-5 flex items-center justify-between">
+              <div className="section-heading">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Today's Birthdays 🎂
+                  <h2>
+                    Today's Birthdays
                   </h2>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    Don't forget to send your wishes.
+                  <p>
+                    Don't forget to send your loved ones there wishes and gifts.
                   </p>
                 </div>
 
-                <Gift className="text-indigo-600" />
+                <Gift className="section-icon" />
               </div>
 
               {todayBirthdays.length > 0 ? (
-                <div className="space-y-3">
+                <div className="birthday-list">
                   {todayBirthdays.map((birthday) => (
                     <BirthdayCard
                       key={birthday.id}
@@ -417,38 +394,37 @@ function App() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl bg-slate-50 p-8 text-center">
-                  <Cake className="mx-auto h-9 w-9 text-slate-300" />
+                <div className="empty-state">
+                  <Cake size={30} />
 
-                  <p className="mt-3 font-medium text-slate-700">
+                  <p>
                     No birthdays today
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p>
                     Your next celebration is coming soon.
                   </p>
                 </div>
               )}
 
             </section>
+            <section className="content-card">
 
-            {/* Upcoming birthdays */}
-            <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
-
-              <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="section-heading with-search">
 
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">
+                  <h2>
                     Upcoming Birthdays
                   </h2>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p>
                     Keep track of upcoming celebrations.
                   </p>
                 </div>
 
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="search-wrap">
+
+                  <Search className="search-icon" size={16} />
 
                   <input
                     type="search"
@@ -458,14 +434,14 @@ function App() {
                     }
                     placeholder="Search birthdays..."
                     aria-label="Search birthdays"
-                    className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-4 text-sm outline-none focus:border-indigo-500 sm:w-64"
+                    className="search-input"
                   />
                 </div>
 
               </div>
 
               {filteredBirthdays.length > 0 ? (
-                <div className="space-y-3">
+                <div className="birthday-list">
                   {filteredBirthdays.map((birthday) => (
                     <BirthdayCard
                       key={birthday.id}
@@ -474,10 +450,10 @@ function App() {
                   ))}
                 </div>
               ) : (
-                <div className="py-10 text-center">
-                  <Search className="mx-auto h-8 w-8 text-slate-300" />
+                <div className="empty-state">
+                  <Search size={30} />
 
-                  <p className="mt-3 text-sm text-slate-600">
+                  <p>
                     No matching birthdays found.
                   </p>
                 </div>
@@ -485,14 +461,13 @@ function App() {
 
             </section>
 
-            <footer className="pb-4 text-center text-xs text-slate-400">
-              Birthday Reminder · Never miss a special day.
+            <footer className="app-footer">
+              Birthday Reminder
             </footer>
 
           </div>
 
         </main>
-      </div>
     </div>
   );
 }

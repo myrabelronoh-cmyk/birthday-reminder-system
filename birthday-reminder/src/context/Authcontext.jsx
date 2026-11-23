@@ -6,12 +6,12 @@ import {
 } from "react";
 
 import {
-  observeAuthState,
-} from "../services/authService";
-
-import {
-  isFirebaseConfigured,
-} from "../services/firebase";
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
+import { auth, isFirebaseConfigured } from "../firebase";
 
 const AuthContext = createContext(null);
 
@@ -19,6 +19,39 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
+
+  async function signUp(email, password) {
+    setAuthError("");
+
+    try {
+      return await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }
+
+  async function signIn(email, password) {
+    setAuthError("");
+
+    try {
+      return await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }
+
+  async function signOut() {
+    setAuthError("");
+
+    try {
+      await firebaseSignOut(auth);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -29,11 +62,18 @@ export function AuthProvider({ children }) {
     let unsubscribe;
 
     try {
-      unsubscribe = observeAuthState((user) => {
-        setCurrentUser(user);
-        setLoading(false);
-        setAuthError("");
-      });
+      unsubscribe = onAuthStateChanged(
+        auth,
+        (user) => {
+          setCurrentUser(user);
+          setLoading(false);
+          setAuthError("");
+        },
+        (error) => {
+          setAuthError(error.message);
+          setLoading(false);
+        }
+      );
     } catch (error) {
       setAuthError(error.message);
       setLoading(false);
@@ -51,6 +91,9 @@ export function AuthProvider({ children }) {
     loading,
     authError,
     isAuthenticated: Boolean(currentUser),
+    signUp,
+    signIn,
+    signOut,
   };
 
   return (
