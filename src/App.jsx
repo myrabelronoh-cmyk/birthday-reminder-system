@@ -1,3 +1,4 @@
+
 import {
   Cake,
   Heart,
@@ -7,12 +8,12 @@ import {
   Search,
   Bell,
   Plus,
+  ChevronRight,
   Settings,
   LayoutDashboard,
   Calendar,
   LoaderCircle,
   AlertCircle,
-  Cake,
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
@@ -193,11 +194,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
+
       <div className="flex min-h-screen">
+
+        
         <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white p-6 lg:block">
+
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-indigo-600 p-2">
-              <Balloons className="h-6 w-6 text-white" />
+              <Cake className="h-6 w-6 text-white" />
             </div>
 
             <div>
@@ -216,7 +221,7 @@ function App() {
               href="#/"
               className="flex items-center gap-3 rounded-xl bg-indigo-50 px-4 py-3 font-medium text-indigo-700"
             >
-              <LayoutDashboard size={22} />
+              <LayoutDashboard size={19} />
               Dashboard
             </a>
 
@@ -224,7 +229,7 @@ function App() {
               href="#/birthdays"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-50"
             >
-              <Calendar size={22} />
+              <Calendar size={19} />
               Birthdays
             </a>
 
@@ -232,13 +237,13 @@ function App() {
               href="#/settings"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-50"
             >
-                <Settings size={22} />
-                Settings
-                </a>
+              <Settings size={19} />
+              Settings
+            </a>
 
-            </nav>
+          </nav>
 
-            <div className="mt-12 rounded-2xl bg-indigo-50 p-4">
+          <div className="mt-12 rounded-2xl bg-indigo-50 p-4">
             <Gift className="h-7 w-7 text-indigo-600" />
 
             <h3 className="mt-3 font-semibold text-indigo-900">
@@ -312,6 +317,8 @@ function App() {
               </button>
 
             </section>
+
+            {/* Firebase status */}
             <section
               className={`flex items-start gap-3 rounded-xl border p-4 ${
                 isFirebaseConfigured
@@ -424,6 +431,8 @@ function App() {
               )}
 
             </section>
+
+            {/* Upcoming birthdays */}
             <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
 
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
